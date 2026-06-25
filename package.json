@@ -1,0 +1,28 @@
+{
+  "name": "voila-luxury-skincare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Voila's Luxury Skincare Aesthetics — brand website & booking platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "framer-motion": "^12.42.0",
+    "next": "15.1.6",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.2.0",
+    "@tailwindcss/postcss": "^4.1.11",
+    "eslint": "9.18.0",
+    "eslint-config-next": "15.1.6",
+    "tailwindcss": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}

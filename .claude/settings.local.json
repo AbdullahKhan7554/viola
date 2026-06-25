@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Start-Process \"http://localhost:3000/\"; Write-Output \"Opened http://localhost:3000/ in default browser\")",
+      "Bash(node bridal-shot.js)"
+    ]
+  }
+}

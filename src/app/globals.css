@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────
+   Voila Luxury Skincare — Design Tokens (Tailwind v4 @theme)
+   Tokens are exposed as Tailwind utilities (e.g. bg-bg, text-primary)
+   and as CSS variables for custom usage.
+   ────────────────────────────────────────────────────────────── */
+@theme {
+  /* Color palette (PRD §17.3) */
+  --color-bg: #fbf7f3; /* cream / ivory background */
+  --color-surface: #ffffff; /* cards */
+  --color-primary: #7a4e57; /* deep mauve / plum */
+  --color-primary-dark: #623e45; /* hover */
+  --color-secondary: #d8a7a0; /* rose / blush */
+  --color-accent: #c9a66b; /* brushed gold */
+  --color-accent-dark: #ab8b51; /* gold hover */
+  --color-soft: #e9d5cf; /* soft blush surfaces */
+  --color-text: #2e2a2b; /* primary text */
+  --color-muted: #6b6164; /* secondary text */
+  --color-line: #ece2db; /* hairline borders */
+  --color-success: #25d366; /* WhatsApp green */
+  --color-success-dark: #1da851;
+
+  /* Typography */
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Radius (PRD §17.6) */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 20px -8px rgba(122, 78, 87, 0.18);
+  --shadow-elevated: 0 18px 50px -20px rgba(122, 78, 87, 0.28);
+
+  /* Breakpoints (PRD §13) */
+  --breakpoint-xs: 30rem; /* 480px */
+  --breakpoint-sm: 40rem; /* 640px */
+  --breakpoint-md: 48rem; /* 768px */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 90rem; /* 1440px */
+}
+
+/* ── Base layer ─────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--color-primary);
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Visible, accessible focus rings (WCAG 2.1 AA) */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Respect reduced-motion globally */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  ::selection {
+    background: var(--color-soft);
+    color: var(--color-primary-dark);
+  }
+}
+
+/* ── Reusable component classes ─────────────────────────────── */
+@layer components {
+  /* Fluid section rhythm */
+  .section-pad {
+    padding-block: clamp(3.5rem, 8vw, 7rem);
+  }
+
+  /* Gradient gold rule used under section headings */
+  .gold-rule {
+    height: 2px;
+    width: 56px;
+    background: linear-gradient(90deg, var(--color-accent), transparent);
+    border-radius: var(--radius-full);
+  }
+
+  /* Eyebrow / kicker label */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+  }
+}
+
+/* ── Scroll-reveal animation (CSS-driven, JS just toggles class) ─ */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Gentle hero fade-up used above the fold (no JS dependency) */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-fade-up {
+  animation: fadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Slow ambient zoom for hero media */
+@keyframes slowZoom {
+  from { transform: scale(1.06); }
+  to { transform: scale(1); }
+}
+.animate-slow-zoom {
+  animation: slowZoom 12s ease-out both;
+}
+
+/* Hero scroll cue — a gold segment travelling down a hairline */
+@keyframes scrollcue {
+  0% { transform: translateY(-12px); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(36px); opacity: 0; }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Cinematic intro + "doors opening" reveal
+   Pre-paint <html> classes (set by the inline script in layout) keep
+   everything flash-free and coordinated with the Framer Motion overlay:
+     • intro-skip     → reduced-motion / already-seen: hide overlay
+     • intro-active   → first visit: lock scroll + hold the hero entrance
+     • intro-revealed → doors opening: scale-up + fade-in the homepage
+   ────────────────────────────────────────────────────────────── */
+html.intro-skip #voila-intro {
+  display: none !important;
+}
+
+/* First visit: lock scroll until the reveal completes. */
+html.intro-active,
+html.intro-active body {
+  overflow: hidden;
+}
+
+/* Hold the hero's staggered entrance until the doors open. */
+html.intro-active .animate-fade-up {
+  animation-play-state: paused;
+}
+
+/* Homepage scales up + fades in as the doors part. */
+@keyframes introReveal {
+  from {
+    transform: scale(0.985);
+    opacity: 0.55;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+html.intro-revealed #main {
+  animation: introReveal 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center top;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.intro-revealed #main {
+    animation: none;
+  }
+}
