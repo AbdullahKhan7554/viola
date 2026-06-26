@@ -34,7 +34,6 @@ import { BUSINESS } from "@/lib/constants";
 // it on every entry / refresh (current preference).
 const PLAY_ONCE = false;
 const SESSION_KEY = "voila:intro-seen";
-const SKIP_AFTER_MS = 2000;
 const SAFETY_MAX_MS = 9000;
 const FREEZE_MS = 260; // hold the final frame before the doors open
 const PANEL_MS = 1250; // door slide duration
@@ -57,8 +56,6 @@ function setLock(lock) {
 export default function IntroVideo() {
   const [show, setShow] = useState(true);
   const [phase, setPhase] = useState("playing"); // playing | frozen | splitting
-  const [canSkip, setCanSkip] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [frozenSrc, setFrozenSrc] = useState(null);
 
   const videoRef = useRef(null);
@@ -146,13 +143,12 @@ export default function IntroVideo() {
       if (p && typeof p.catch === "function") p.catch(() => beginReveal());
     }
 
-    const skipTimer = window.setTimeout(() => setCanSkip(true), SKIP_AFTER_MS);
     const safetyTimer = window.setTimeout(beginReveal, SAFETY_MAX_MS);
+    // Keyboard escape stays available for accessibility (no visible button).
     const onKey = (e) => e.key === "Escape" && beginReveal();
     window.addEventListener("keydown", onKey);
 
     return () => {
-      window.clearTimeout(skipTimer);
       window.clearTimeout(safetyTimer);
       window.removeEventListener("keydown", onKey);
     };
@@ -207,10 +203,6 @@ export default function IntroVideo() {
                   poster="/images/intro-poster.webp"
                   aria-hidden="true"
                   tabIndex={-1}
-                  onTimeUpdate={(e) => {
-                    const v = e.currentTarget;
-                    if (v.duration) setProgress((v.currentTime / v.duration) * 100);
-                  }}
                   onEnded={beginReveal}
                   onError={beginReveal}
                 >
@@ -249,30 +241,6 @@ export default function IntroVideo() {
                 >
                   {BUSINESS.tagline}
                 </motion.span>
-              </div>
-
-              <motion.button
-                type="button"
-                onClick={beginReveal}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: canSkip ? 1 : 0, y: canSkip ? 0 : 12 }}
-                transition={{ duration: 0.5, ease: EASE }}
-                className={`absolute bottom-7 right-6 z-20 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-colors hover:border-[#e6c98f] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                  canSkip ? "" : "pointer-events-none"
-                }`}
-                aria-label="Skip intro and enter the site"
-              >
-                Skip intro
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M5 5h2v14H5V5Zm4.5 7L18 5.5v13L9.5 12Z" />
-                </svg>
-              </motion.button>
-
-              <div className="absolute inset-x-0 bottom-0 z-20 h-[3px] bg-white/10" aria-hidden="true">
-                <div
-                  className="h-full bg-gradient-to-r from-[#c9a66b] to-[#e6c98f]"
-                  style={{ width: `${progress}%`, transition: "width 0.2s linear" }}
-                />
               </div>
             </>
           )}
