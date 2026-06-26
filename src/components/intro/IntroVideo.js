@@ -134,13 +134,11 @@ export default function IntroVideo() {
 
     setLock(true);
 
-    // Drive playback resiliently: retry on every readiness signal instead of
-    // tearing the intro down on the first (expected) mobile rejection. Only a
-    // genuine policy block once the media is ready (e.g. iOS Low Power Mode)
-    // skips straight to the reveal — the safety timer covers any other stall.
-    const stopAutoplay = primeAutoplay(videoRef.current, {
-      onBlocked: beginReveal,
-    });
+    // Drive playback resiliently: retry on every readiness signal and on the
+    // first user gesture instead of tearing the intro down on a mobile block.
+    // The safety timer below is the only backstop, so a genuine hard-block
+    // (e.g. iOS Low Power Mode) still reveals the site gracefully.
+    const stopAutoplay = primeAutoplay(videoRef.current);
 
     const safetyTimer = window.setTimeout(beginReveal, SAFETY_MAX_MS);
     // Keyboard escape stays available for accessibility (no visible button).

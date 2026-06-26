@@ -48,21 +48,35 @@ export const INLINE_AUTOPLAY_ATTRS = {
   "x-webkit-airplay": "deny",
 };
 
+// First-gesture events that count as a user activation across engines. The
+// instant any of these fire, a previously-blocked muted video is allowed to
+// play — so we never have to surface a play button.
+const GESTURE_EVENTS = [
+  "touchstart",
+  "touchend",
+  "pointerdown",
+  "mousedown",
+  "click",
+  "keydown",
+  "scroll",
+];
+
 /**
- * Drive a muted <video> to actually play across mobile engines.
+ * Drive a muted <video> to actually play across every mobile engine.
  *
- * Re-asserts the muted state (DOM property, not just attribute), denies remote
- * playback, then attempts `play()` immediately and again on each readiness
- * event and on tab re-focus. Returns a cleanup function.
+ * Strategy (in order of how reliably each path fires):
+ *  1. Re-assert the muted *property* (what the autoplay policy reads) + deny
+ *     remote playback, then attempt play() immediately.
+ *  2. Retry play() on every readiness signal and on tab re-focus — covers the
+ *     normal "data/decoder wasn't ready on the first microtask" mobile case.
+ *  3. If the OS still refuses muted autoplay (iOS Low Power Mode, strict
+ *     per-site settings), arm a one-shot listener so the FIRST user gesture
+ *     anywhere on the page silently starts the video. No play button needed.
  *
  * @param {HTMLVideoElement} video
- * @param {{ onBlocked?: () => void }} [opts]
- *   onBlocked fires only if playback is still blocked after the element is
- *   actually ready (genuine policy block, e.g. iOS Low Power Mode) — never on
- *   the first, expected "not ready yet" rejection.
  * @returns {() => void} cleanup
  */
-export function primeAutoplay(video, { onBlocked } = {}) {
+export function primeAutoplay(video) {
   if (!video) return () => {};
 
   // The muted *property* (distinct from the attribute) is what the autoplay
@@ -78,22 +92,27 @@ export function primeAutoplay(video, { onBlocked } = {}) {
     /* not supported — the attribute form above already covers it */
   }
 
-  let settled = false;
+  let cleaned = false;
+
+  const removeGestureListeners = () => {
+    GESTURE_EVENTS.forEach((e) =>
+      window.removeEventListener(e, onGesture, gestureOpts)
+    );
+  };
 
   const tryPlay = () => {
-    if (settled) return;
+    // Keep it muted in case anything toggled it; muted is the autoplay gate.
+    video.muted = true;
     const p = video.play();
     if (p && typeof p.then === "function") {
-      p.then(() => {
-        settled = true;
-      }).catch(() => {
-        // Only treat it as a real block once the media is genuinely ready;
-        // early rejections are just "data/decoder not ready yet" and resolve
-        // on the next readiness event.
-        if (video.readyState >= 2 && onBlocked) onBlocked();
+      p.then(removeGestureListeners).catch(() => {
+        /* still blocked — readiness events / first gesture will retry */
       });
     }
   };
+
+  const gestureOpts = { passive: true, capture: true };
+  const onGesture = () => tryPlay();
 
   const onVisible = () => {
     if (!document.hidden) tryPlay();
@@ -104,11 +123,20 @@ export function primeAutoplay(video, { onBlocked } = {}) {
   video.addEventListener("canplay", tryPlay);
   video.addEventListener("canplaythrough", tryPlay);
   document.addEventListener("visibilitychange", onVisible);
+  // Once playing, drop the gesture net so we never fight the user later.
+  video.addEventListener("playing", removeGestureListeners);
+  GESTURE_EVENTS.forEach((e) =>
+    window.addEventListener(e, onGesture, gestureOpts)
+  );
 
   return () => {
+    if (cleaned) return;
+    cleaned = true;
     video.removeEventListener("loadeddata", tryPlay);
     video.removeEventListener("canplay", tryPlay);
     video.removeEventListener("canplaythrough", tryPlay);
+    video.removeEventListener("playing", removeGestureListeners);
     document.removeEventListener("visibilitychange", onVisible);
+    removeGestureListeners();
   };
 }
