@@ -27,13 +27,17 @@
  * deny AirPlay/remote playback, and retry `play()` on every readiness signal.
  */
 
-// Attributes that MUST be in the server-rendered markup (parse-time critical).
-// Spread onto the <video> element in JSX.
+// Inline-playback flags that MUST be in the server-rendered markup (parse-time
+// critical) and are identical for every video. Spread onto the <video> in JSX.
+//
+// Deliberately does NOT include `autoPlay` or `preload`: those are
+// per-element concerns. Only the minimum number of videos should decode at
+// once, so a video that must wait its turn (e.g. the hero behind the intro)
+// omits `autoPlay` and starts with `preload="none"`, then is driven by
+// primeAutoplay() when it is actually visible. See ARCHITECTURE note below.
 export const INLINE_AUTOPLAY_ATTRS = {
-  autoPlay: true,
   muted: true,
   playsInline: true,
-  preload: "auto",
   // Recognised React boolean prop — blocks the PiP affordance on Chrome/Edge.
   disablePictureInPicture: true,
   // Strips download / fullscreen / remote-playback controls if any UA exposes
@@ -138,5 +142,66 @@ export function primeAutoplay(video) {
     video.removeEventListener("playing", removeGestureListeners);
     document.removeEventListener("visibilitychange", onVisible);
     removeGestureListeners();
+  };
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   ARCHITECTURE: one decoder at a time
+   --------------------------------------------------------------------------
+   The cinematic intro overlay covers the homepage, so while it plays the hero
+   video behind it is invisible. Decoding both at once buys nothing and, on
+   constrained mobile hardware, two simultaneous H.264 decoders contend for the
+   same fixed pool — plus both compete for bandwidth, slowing the intro's
+   startup (the most autoplay-sensitive moment). So the hero waits: it ships
+   with `preload="none"` and no `autoPlay`, and only loads + plays once the
+   intro signals it is done. If there is no intro (reduced-motion / already
+   revealed) the hero starts immediately.
+   ────────────────────────────────────────────────────────────────────────── */
+
+const INTRO_DONE_EVENT = "voila:intro-done";
+
+/** True while the cinematic intro overlay is covering the page. */
+export function isIntroActive() {
+  return (
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("intro-active")
+  );
+}
+
+/** Fire-and-forget: tell any deferred videos the intro has handed off. */
+export function signalIntroDone() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(INTRO_DONE_EVENT));
+  }
+}
+
+/**
+ * Run `cb` once the intro is no longer covering the page — immediately if no
+ * intro is active, otherwise on the intro-done signal. A safety timeout
+ * guarantees `cb` runs even if the signal is somehow missed, so the hero can
+ * never get stuck on its poster. Returns a cleanup function.
+ *
+ * @param {() => void} cb
+ * @param {number} [safetyMs] hard cap before running `cb` regardless
+ */
+export function whenIntroDone(cb, safetyMs = 10000) {
+  if (typeof window === "undefined" || !isIntroActive()) {
+    cb();
+    return () => {};
+  }
+  let done = false;
+  const run = () => {
+    if (done) return;
+    done = true;
+    window.removeEventListener(INTRO_DONE_EVENT, run);
+    window.clearTimeout(timer);
+    cb();
+  };
+  const timer = window.setTimeout(run, safetyMs);
+  window.addEventListener(INTRO_DONE_EVENT, run, { once: true });
+  return () => {
+    done = true;
+    window.removeEventListener(INTRO_DONE_EVENT, run);
+    window.clearTimeout(timer);
   };
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BUSINESS } from "@/lib/constants";
-import { INLINE_AUTOPLAY_ATTRS, primeAutoplay } from "@/lib/video";
+import { INLINE_AUTOPLAY_ATTRS, primeAutoplay, signalIntroDone } from "@/lib/video";
 
 /**
  * Cinematic intro with a luxury "doors opening" split-screen reveal.
@@ -89,6 +89,11 @@ export default function IntroVideo() {
 
     const v = videoRef.current;
     if (v) v.pause();
+
+    // The intro's decoder is now free — let the hero behind us start loading +
+    // playing so it is already in motion as the doors part (one decoder at a
+    // time). The hero stays muted/inline; nothing visible happens yet.
+    signalIntroDone();
 
     const src = captureFrame();
     if (!src) {
@@ -197,6 +202,8 @@ export default function IntroVideo() {
                   poster="/images/intro-poster.webp"
                   aria-hidden="true"
                   tabIndex={-1}
+                  autoPlay
+                  preload="auto"
                   onEnded={beginReveal}
                   onError={beginReveal}
                   {...INLINE_AUTOPLAY_ATTRS}
