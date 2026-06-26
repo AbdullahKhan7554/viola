@@ -2,12 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import Icon from "./Icon";
 import { formatDate } from "@/lib/utils";
+import TiltCard from "@/components/motion/TiltCard";
 
-/** Skin Journal post card for the blog index. */
+/** Skin Journal post card for the blog index — 3D tilt + gold sheen on hover. */
 export default function PostCard({ post, priority = false }) {
   const href = `/blog/${post.slug}`;
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-lg bg-surface shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+   <TiltCard className="group h-full rounded-lg">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-lg bg-surface shadow-soft transition-shadow duration-300 hover:shadow-elevated">
       <div className="relative aspect-[16/10] overflow-hidden">
         <Image
           src={post.image}
@@ -41,7 +43,8 @@ export default function PostCard({ post, priority = false }) {
           />
         </span>
       </div>
-      <Link href={href} className="absolute inset-0" aria-label={post.title} />
+      <Link href={href} className="absolute inset-0 z-20" aria-label={post.title} />
     </article>
+   </TiltCard>
   );
 }

@@ -1,9 +1,11 @@
 import StarRating from "./StarRating";
+import TiltCard from "@/components/motion/TiltCard";
 
-/** Testimonial card (PRD §17.4). */
+/** Testimonial card (PRD §17.4) with a subtle 3D tilt + gold sheen on hover. */
 export default function ReviewCard({ review }) {
   return (
-    <figure className="flex h-full flex-col rounded-lg border border-line bg-surface p-7 shadow-soft">
+   <TiltCard className="group h-full rounded-lg" max={5}>
+    <figure className="flex h-full flex-col rounded-lg border border-line bg-surface p-7 shadow-soft transition-shadow duration-300 hover:shadow-elevated">
       <StarRating value={review.rating} size={18} />
       <blockquote className="mt-4 flex-1 text-[1.02rem] leading-relaxed text-text">
         “{review.quote}”
@@ -23,5 +25,6 @@ export default function ReviewCard({ review }) {
         </span>
       </figcaption>
     </figure>
+   </TiltCard>
   );
 }

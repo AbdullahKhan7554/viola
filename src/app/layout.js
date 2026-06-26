@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import StickyWhatsApp from "@/components/layout/StickyWhatsApp";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import IntroVideo from "@/components/intro/IntroVideo";
+import ScrollProgress from "@/components/motion/ScrollProgress";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
 import { businessSchema, jsonLd } from "@/lib/schema";
 
@@ -111,6 +112,9 @@ export default function RootLayout({ children }) {
 
         {/* Cinematic first-visit intro (once per session) */}
         <IntroVideo />
+
+        {/* Slim reading-progress bar (native scrolling kept for smoothness) */}
+        <ScrollProgress />
 
         {/* Skip link for keyboard users (WCAG 2.1 AA) */}
         <a

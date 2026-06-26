@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { m, LazyMotion, domAnimation, useReducedMotion } from "framer-motion";
 import Icon from "@/components/ui/Icon";
 import Button from "@/components/ui/Button";
 import { WhatsAppButton } from "@/components/ui/TrackedCTA";
@@ -9,22 +10,84 @@ import { track } from "@/lib/analytics";
 import { treatments } from "@/content/treatments";
 
 const FIELD =
-  "w-full rounded-md border border-line bg-bg px-4 py-3 text-text outline-none transition-colors placeholder:text-muted/70 focus:border-accent focus:bg-surface";
+  "w-full rounded-md border border-line bg-bg px-4 py-3 text-text outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] placeholder:text-muted/70 focus:border-accent focus:bg-surface focus:shadow-[0_0_0_4px_rgba(201,166,107,0.14)]";
 
 function Field({ label, htmlFor, error, required, children }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-text">
+    <div className="group/field flex flex-col gap-1.5">
+      <label
+        htmlFor={htmlFor}
+        className="text-sm font-medium text-text transition-colors duration-300 group-focus-within/field:text-accent-dark"
+      >
         {label}
         {required ? <span className="text-secondary"> *</span> : null}
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} role="alert" className="text-sm text-secondary">
+        <p
+          id={`${htmlFor}-error`}
+          role="alert"
+          className="animate-fade-up text-sm text-secondary"
+        >
           {error}
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Animated confirmation shown after a successful submission — the card springs
+ * in, the gold ring sweeps around, and the checkmark pops, for a delightful
+ * "done" moment. Reduced-motion renders it statically.
+ */
+function SuccessCard() {
+  const reduce = useReducedMotion();
+  const ease = [0.22, 1, 0.36, 1];
+
+  return (
+    <LazyMotion features={domAnimation} strict>
+      <m.div
+        className="rounded-lg border border-line bg-surface p-8 text-center shadow-soft"
+        initial={reduce ? false : { opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.7, ease }}
+      >
+        <m.span
+          className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success"
+          initial={reduce ? false : { scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 220, damping: 14, delay: 0.15 }}
+        >
+          {!reduce && (
+            <m.span
+              aria-hidden="true"
+              className="absolute inset-0 rounded-full ring-2 ring-success/40"
+              initial={{ scale: 1, opacity: 0.7 }}
+              animate={{ scale: 1.6, opacity: 0 }}
+              transition={{ duration: 1, ease, delay: 0.3 }}
+            />
+          )}
+          <m.span
+            initial={reduce ? false : { scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.32 }}
+          >
+            <Icon name="check" size={32} />
+          </m.span>
+        </m.span>
+        <h3 className="text-2xl">Thank you — we’ve got your request!</h3>
+        <p className="mx-auto mt-3 max-w-md text-muted">
+          Our team will reach out shortly to confirm your appointment. For the
+          fastest response, you can also message us directly on WhatsApp.
+        </p>
+        <div className="mt-6 flex justify-center">
+          <WhatsAppButton location="form_success" className="btn-shine">
+            Continue on WhatsApp
+          </WhatsAppButton>
+        </div>
+      </m.div>
+    </LazyMotion>
   );
 }
 
@@ -82,23 +145,7 @@ export default function LeadForm() {
   }
 
   if (status === "success") {
-    return (
-      <div className="rounded-lg border border-line bg-surface p-8 text-center shadow-soft">
-        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success">
-          <Icon name="check" size={30} />
-        </span>
-        <h3 className="text-2xl">Thank you — we’ve got your request!</h3>
-        <p className="mx-auto mt-3 max-w-md text-muted">
-          Our team will reach out shortly to confirm your appointment. For the
-          fastest response, you can also message us directly on WhatsApp.
-        </p>
-        <div className="mt-6 flex justify-center">
-          <WhatsAppButton location="form_success">
-            Continue on WhatsApp
-          </WhatsAppButton>
-        </div>
-      </div>
-    );
+    return <SuccessCard />;
   }
 
   return (
@@ -235,7 +282,7 @@ export default function LeadForm() {
           type="submit"
           size="lg"
           disabled={status === "submitting"}
-          className="w-full sm:w-auto"
+          className="btn-shine w-full sm:w-auto"
         >
           {status === "submitting" ? "Sending…" : "Request my appointment"}
         </Button>

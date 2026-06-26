@@ -1,15 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "./Icon";
+import TiltCard from "@/components/motion/TiltCard";
 
 /**
  * Treatment card (PRD §17.4). Used on the home grid and treatments hub.
  * Image uses `fill` inside a fixed aspect ratio box → zero layout shift.
+ * Wrapped in TiltCard for a 3D lean + cursor-tracking gold sheen on hover
+ * (the lift is owned by TiltCard; it degrades to a static card on touch).
  */
 export default function TreatmentCard({ treatment, priority = false }) {
   const href = `/treatments/${treatment.slug}`;
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-lg bg-surface shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated">
+   <TiltCard className="group h-full rounded-lg">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-lg bg-surface shadow-soft transition-shadow duration-300 hover:shadow-elevated">
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
           src={treatment.image}
@@ -45,9 +49,10 @@ export default function TreatmentCard({ treatment, priority = false }) {
         </Link>
       </div>
       {/* Full-card click target for accessibility & large tap area */}
-      <Link href={href} className="absolute inset-0" aria-hidden="true" tabIndex={-1}>
+      <Link href={href} className="absolute inset-0 z-20" aria-hidden="true" tabIndex={-1}>
         <span className="sr-only">{treatment.name}</span>
       </Link>
     </article>
+   </TiltCard>
   );
 }

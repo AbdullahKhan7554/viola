@@ -14,7 +14,14 @@ function AccordionItem({ question, answer, defaultOpen = false }) {
   const id = useId();
 
   return (
-    <div className="border-b border-line">
+    <div className="group relative border-b border-line">
+      {/* Gold edge accent that grows in as the item opens. */}
+      <span
+        aria-hidden="true"
+        className={`absolute left-0 top-0 w-px bg-gradient-to-b from-accent to-secondary transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          open ? "h-full opacity-100" : "h-0 opacity-0"
+        }`}
+      />
       <h3 className="m-0">
         <button
           type="button"
@@ -26,28 +33,42 @@ function AccordionItem({ question, answer, defaultOpen = false }) {
             setOpen(next);
             if (next) track.faqExpand(question);
           }}
-          className="flex w-full items-center justify-between gap-4 py-5 text-left font-sans text-[1.02rem] font-medium text-text transition-colors hover:text-primary"
+          className={`flex w-full items-center justify-between gap-4 py-5 pl-4 text-left font-sans text-[1.02rem] font-medium transition-colors duration-300 hover:text-primary ${
+            open ? "text-primary" : "text-text"
+          }`}
         >
           <span>{question}</span>
-          <Icon
-            name="chevronDown"
-            size={22}
-            className={`shrink-0 text-accent transition-transform duration-300 ${
-              open ? "rotate-180" : ""
+          <span
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+              open ? "bg-accent/15 text-accent" : "text-accent group-hover:bg-soft"
             }`}
-          />
+          >
+            <Icon
+              name="chevronDown"
+              size={20}
+              className={`transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                open ? "rotate-180" : ""
+              }`}
+            />
+          </span>
         </button>
       </h3>
       <div
         id={`${id}-panel`}
         role="region"
         aria-labelledby={`${id}-button`}
-        className={`grid transition-all duration-300 ease-out ${
+        className={`grid transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
         }`}
       >
         <div className="overflow-hidden">
-          <p className="pb-5 pr-8 text-muted">{answer}</p>
+          <p
+            className={`pb-5 pl-4 pr-8 text-muted transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              open ? "translate-y-0 blur-0" : "-translate-y-2 blur-[2px]"
+            }`}
+          >
+            {answer}
+          </p>
         </div>
       </div>
     </div>

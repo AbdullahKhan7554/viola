@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Logo from "@/components/ui/Logo";
 import Icon from "@/components/ui/Icon";
 import { WhatsAppButton } from "@/components/ui/TrackedCTA";
+import Magnetic from "@/components/motion/Magnetic";
 import { NAV_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -69,34 +70,38 @@ export default function NavBar() {
               (link.href !== "/" && pathname.startsWith(link.href));
             return (
               <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "relative text-sm font-medium tracking-wide transition-colors",
-                    solid ? "text-text" : "text-white",
-                    "hover:text-accent",
-                    active && "text-accent"
-                  )}
-                >
-                  {link.label}
-                  <span
+                <Magnetic strength={0.4} className="inline-block">
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "absolute -bottom-1.5 left-0 h-px bg-accent transition-all duration-300",
-                      active ? "w-full" : "w-0"
+                      "group relative inline-block text-sm font-medium tracking-wide transition-colors",
+                      solid ? "text-text" : "text-white",
+                      "hover:text-accent",
+                      active && "text-accent"
                     )}
-                    aria-hidden="true"
-                  />
-                </Link>
+                  >
+                    {link.label}
+                    <span
+                      className={cn(
+                        "absolute -bottom-1.5 left-0 h-px origin-left bg-accent transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                        active ? "w-full" : "w-0 group-hover:w-full"
+                      )}
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </Magnetic>
               </li>
             );
           })}
         </ul>
 
         <div className="hidden lg:block">
-          <WhatsAppButton size="sm" location="navbar">
-            Book Now
-          </WhatsAppButton>
+          <Magnetic strength={0.45} className="inline-flex">
+            <WhatsAppButton size="sm" location="navbar" className="btn-shine">
+              Book Now
+            </WhatsAppButton>
+          </Magnetic>
         </div>
 
         {/* Mobile toggle */}
@@ -138,22 +143,35 @@ export default function NavBar() {
           )}
         >
           <ul className="flex flex-col">
-            {NAV_LINKS.map((link) => {
+            {NAV_LINKS.map((link, i) => {
               const active =
                 pathname === link.href ||
                 (link.href !== "/" && pathname.startsWith(link.href));
               return (
-                <li key={link.href} className="border-b border-line/70">
+                <li
+                  key={link.href}
+                  className={cn(
+                    "border-b border-line/70 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    open
+                      ? "translate-x-0 opacity-100 blur-0"
+                      : "translate-x-3 opacity-0 blur-sm"
+                  )}
+                  style={{ transitionDelay: open ? `${80 + i * 45}ms` : "0ms" }}
+                >
                   <Link
                     href={link.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center justify-between py-4 text-lg font-medium",
+                      "group flex items-center justify-between py-4 text-lg font-medium",
                       active ? "text-accent" : "text-text"
                     )}
                   >
                     {link.label}
-                    <Icon name="chevronRight" size={20} className="text-muted" />
+                    <Icon
+                      name="chevronRight"
+                      size={20}
+                      className="text-muted transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"
+                    />
                   </Link>
                 </li>
               );

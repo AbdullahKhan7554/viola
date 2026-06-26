@@ -4,6 +4,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
+import Parallax from "@/components/motion/Parallax";
 import { BUSINESS } from "@/lib/constants";
 
 const pillars = [
@@ -18,17 +19,22 @@ export default function AboutTeaser() {
     <section className="section-pad bg-soft/40">
       <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <ScrollReveal className="relative">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-lg shadow-elevated">
-            <Image
-              src="/images/voila-reception.webp"
-              alt="The welcoming reception at Voila Luxury Skincare Aesthetics in Lahore"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-            />
+          <div className="group relative aspect-[4/5] overflow-hidden rounded-lg shadow-elevated">
+            <Parallax speed={70} className="absolute inset-0">
+              <div className="absolute inset-0 scale-110">
+                <Image
+                  src="/images/voila-reception.webp"
+                  alt="The welcoming reception at Voila Luxury Skincare Aesthetics in Lahore"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
+                />
+              </div>
+            </Parallax>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary/25 via-transparent to-transparent" />
           </div>
           {/* Floating rating card */}
-          <div className="absolute -bottom-6 -right-2 rounded-lg bg-surface p-5 shadow-elevated sm:-right-6">
+          <div className="glow-gold absolute -bottom-6 -right-2 rounded-lg bg-surface p-5 shadow-elevated sm:-right-6">
             <p className="font-serif text-4xl font-bold text-primary">5.0</p>
             <p className="text-xs text-muted">
               {BUSINESS.rating.count} verified reviews

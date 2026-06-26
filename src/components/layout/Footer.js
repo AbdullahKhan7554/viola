@@ -32,9 +32,13 @@ export default function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Follow Voila on Instagram"
-            className="mt-5 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 transition-colors hover:border-accent hover:text-accent"
+            className="glow-gold group mt-5 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent hover:text-accent"
           >
-            <Icon name="instagram" size={20} />
+            <Icon
+              name="instagram"
+              size={20}
+              className="transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-[8deg] group-hover:scale-110"
+            />
           </a>
         </div>
 

@@ -121,26 +121,93 @@
     text-transform: uppercase;
     color: var(--color-accent-dark);
   }
+
+  /* ── Premium accents ──────────────────────────────────────── */
+
+  /* Flowing gradient text — a slow gold→rose→gold sweep. Apply to a span. */
+  .text-gradient-gold {
+    background: linear-gradient(
+      100deg,
+      var(--color-accent) 0%,
+      #e6c98f 25%,
+      var(--color-secondary) 50%,
+      #e6c98f 75%,
+      var(--color-accent) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: textShimmer 7s linear infinite;
+  }
+
+  /* Magnetic CTA: gold sheen wipe on hover (the child of .btn-shine). */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 25%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 75%
+    );
+    transform: translateX(-130%);
+    transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .btn-shine:hover::after {
+    transform: translateX(130%);
+  }
+
+  /* Subtle film-grain / noise atmosphere overlay (decorative). */
+  .noise-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Soft gold ring glow for floating badges / icons on hover. */
+  .glow-gold {
+    box-shadow: 0 0 0 0 rgba(201, 166, 107, 0);
+    transition: box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .glow-gold:hover {
+    box-shadow: 0 0 30px -4px rgba(201, 166, 107, 0.5);
+  }
 }
 
 /* ── Scroll-reveal animation (CSS-driven, JS just toggles class) ─ */
 .reveal {
   opacity: 0;
   transform: translateY(22px);
+  filter: blur(8px);
   transition:
     opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
 }
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+  filter: blur(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;
     transform: none;
+    filter: none;
     transition: none;
   }
 }
@@ -211,6 +278,61 @@ html.intro-revealed #main {
 
 @media (prefers-reduced-motion: reduce) {
   html.intro-revealed #main {
+    animation: none;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Ambient atmosphere keyframes (AmbientBackground component)
+   All transform/opacity only → compositor-driven, 60fps, off the
+   main thread. Used behind hero & CTA sections.
+   ────────────────────────────────────────────────────────────── */
+
+/* Flowing gradient-text sweep */
+@keyframes textShimmer {
+  to { background-position: 200% center; }
+}
+
+/* Slow, organic blob drift — three offset variants for parallax depth */
+@keyframes blobDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(6%, 8%, 0) scale(1.08); }
+  66% { transform: translate3d(-5%, 4%, 0) scale(0.95); }
+}
+@keyframes blobDriftSlow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-7%, 9%, 0) scale(1.1); }
+}
+@keyframes blobDriftAlt {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40% { transform: translate3d(8%, -6%, 0) scale(1.06); }
+  75% { transform: translate3d(4%, 6%, 0) scale(0.96); }
+}
+.animate-blob-drift { animation: blobDrift 22s ease-in-out infinite; }
+.animate-blob-drift-slow { animation: blobDriftSlow 28s ease-in-out infinite; }
+.animate-blob-drift-alt { animation: blobDriftAlt 25s ease-in-out infinite; }
+
+/* Floating ambient particles — gentle rise + fade with horizontal drift */
+@keyframes particleFloat {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% {
+    transform: translate3d(var(--drift, 0), -120px, 0);
+    opacity: 0;
+  }
+}
+.animate-particle-float {
+  animation: particleFloat linear infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob-drift,
+  .animate-blob-drift-slow,
+  .animate-blob-drift-alt,
+  .animate-particle-float,
+  .text-gradient-gold {
     animation: none;
   }
 }
