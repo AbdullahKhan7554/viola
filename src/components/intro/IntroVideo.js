@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BUSINESS } from "@/lib/constants";
+import { INLINE_AUTOPLAY_ATTRS, primeAutoplay } from "@/lib/video";
 
 /**
  * Cinematic intro with a luxury "doors opening" split-screen reveal.
@@ -133,15 +134,13 @@ export default function IntroVideo() {
 
     setLock(true);
 
-    const v = videoRef.current;
-    if (v) {
-      v.muted = true;
-      v.defaultMuted = true;
-      v.setAttribute("muted", "");
-      v.setAttribute("webkit-playsinline", "true");
-      const p = v.play();
-      if (p && typeof p.catch === "function") p.catch(() => beginReveal());
-    }
+    // Drive playback resiliently: retry on every readiness signal instead of
+    // tearing the intro down on the first (expected) mobile rejection. Only a
+    // genuine policy block once the media is ready (e.g. iOS Low Power Mode)
+    // skips straight to the reveal — the safety timer covers any other stall.
+    const stopAutoplay = primeAutoplay(videoRef.current, {
+      onBlocked: beginReveal,
+    });
 
     const safetyTimer = window.setTimeout(beginReveal, SAFETY_MAX_MS);
     // Keyboard escape stays available for accessibility (no visible button).
@@ -149,6 +148,7 @@ export default function IntroVideo() {
     window.addEventListener("keydown", onKey);
 
     return () => {
+      stopAutoplay();
       window.clearTimeout(safetyTimer);
       window.removeEventListener("keydown", onKey);
     };
@@ -196,15 +196,12 @@ export default function IntroVideo() {
                 <video
                   ref={videoRef}
                   className="absolute inset-0 h-full w-full object-cover"
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="auto"
                   poster="/images/intro-poster.webp"
                   aria-hidden="true"
                   tabIndex={-1}
                   onEnded={beginReveal}
                   onError={beginReveal}
+                  {...INLINE_AUTOPLAY_ATTRS}
                 >
                   <source src="/video/voila-intro.mp4" type="video/mp4" />
                 </video>

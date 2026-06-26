@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { INLINE_AUTOPLAY_ATTRS, primeAutoplay } from "@/lib/video";
 
 /**
- * Ambient hero video with reliable mobile autoplay.
+ * Ambient hero background video with reliable inline autoplay on every device.
  *
- * Why a client component: iOS Safari / Android Chrome only autoplay when the
- * video is genuinely muted AND has begun loading. Two gotchas are handled
- * here that the plain `<video>` markup could not:
- *   1. React does not reliably reflect the `muted` *attribute* onto the DOM
- *      node — so we set `muted`/`defaultMuted` imperatively before play().
- *   2. `preload="none"` prevents autoplay from ever starting; we let the
- *      browser preload and call play() once data is ready, retrying on
- *      visibility changes (e.g. returning to the tab).
+ * The autoplay-critical attributes (muted / playsinline / webkit-playsinline /
+ * x5-* / preload) are spread from {@link INLINE_AUTOPLAY_ATTRS} so they are in
+ * the server-rendered HTML at parse time — the browser starts its native
+ * autoplay attempt before React hydrates, so these must not be JS-only.
+ * {@link primeAutoplay} then re-asserts the muted property and retries play()
+ * on each readiness signal (Next.js hydration / slow-buffer safe).
  *
- * The poster (also the LCP image behind this) keeps the hero looking perfect
- * if autoplay is blocked (Low Power Mode) or motion is reduced.
+ * The poster (also the hero's LCP image) keeps the section pixel-perfect if the
+ * OS hard-blocks autoplay (e.g. iOS Low Power Mode) — no play button is ever
+ * shown because we never render `controls`.
  */
 export default function HeroVideo({ src, poster, className }) {
   const ref = useRef(null);
@@ -24,52 +24,21 @@ export default function HeroVideo({ src, poster, className }) {
     const video = ref.current;
     if (!video) return;
 
-    // Ensure the element is truly muted at the DOM level (React quirk).
-    video.muted = true;
-    video.defaultMuted = true;
-    video.setAttribute("muted", "");
-    // Legacy iOS inline playback flag.
-    video.setAttribute("webkit-playsinline", "true");
+    // Respect reduced-motion: keep the still poster, skip playback entirely.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Respect reduced-motion: keep the still poster, skip playback.
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (prefersReduced) return;
-
-    const tryPlay = () => {
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    };
-
-    tryPlay();
-    video.addEventListener("loadeddata", tryPlay);
-    video.addEventListener("canplay", tryPlay);
-
-    const onVisible = () => {
-      if (!document.hidden) tryPlay();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      video.removeEventListener("loadeddata", tryPlay);
-      video.removeEventListener("canplay", tryPlay);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    return primeAutoplay(video);
   }, []);
 
   return (
     <video
       ref={ref}
       className={className}
-      autoPlay
-      muted
       loop
-      playsInline
-      preload="auto"
       poster={poster}
       aria-hidden="true"
       tabIndex={-1}
+      {...INLINE_AUTOPLAY_ATTRS}
     >
       <source src={src} type="video/mp4" />
     </video>
